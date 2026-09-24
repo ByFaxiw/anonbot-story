@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Выложить историю</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="static/lottie.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #222222);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .sticker-wrapper {
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #lottie-player {
+            width: 100%;
+            height: 100%;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.42;
+            color: var(--tg-theme-hint-color, #707579);
+            margin-bottom: 28px;
+            padding: 0 8px;
+            font-weight: 400;
+        }
+
+        .btn-story {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(135deg, #ff5c8a 0%, #f64673 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(246, 70, 115, 0.3);
+            transition: transform 0.15s ease, opacity 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-story:active {
+            transform: scale(0.98);
+            opacity: 0.92;
+        }
+
+        .btn-story:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sticker-wrapper">
+            <div id="lottie-player"></div>
+        </div>
+
+        <p class="description">
+            Для того, чтобы выложить историю со своей ссылкой на анонимные послания – нажми кнопку ниже.
+        </p>
+
+        <button id="post-story-btn" class="btn-story">
+            Выложить историю
+        </button>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            try {
+                if (tg.setHeaderColor) tg.setHeaderColor('#ffffff');
+                if (tg.setBackgroundColor) tg.setBackgroundColor('#ffffff');
+            } catch (e) {}
+        }
+
+        // Initialize Lottie Animation
+        try {
+            lottie.loadAnimation({
+                container: document.getElementById('lottie-player'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: 'assets/sticker.json'
+            });
+        } catch (e) {
+            console.error('Lottie load error:', e);
+        }
+
+        // Parse query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const botUsername = urlParams.get('bot') || 'user_bot';
+        const linkName = urlParams.get('link') || '';
+        const customMedia = urlParams.get('media');
+
+        // Target URL for widget link
+        const targetUrl = linkName 
+            ? `https://t.me/${botUsername}?start=${linkName}` 
+            : `https://t.me/${botUsername}`;
+
+        // Absolute URL of media file (story image)
+        const mediaUrl = customMedia || new URL('assets/story_share.png', window.location.href).href;
+
+        const button = document.getElementById('post-story-btn');
+
+        button.addEventListener('click', () => {
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            const caption = `отправляй валентинки в @${botUsername}`;
+            const params = {
+                text: caption,
+                widget_link: {
+                    url: targetUrl,
+                    name: "Валентинки"
+                }
+            };
+
+            // Check if shareToStory is available
+            if (tg && typeof tg.shareToStory === 'function') {
+                try {
+                    tg.shareToStory(mediaUrl, params);
+                } catch (err) {
+                    console.error('shareToStory error:', err);
+                    if (tg.showAlert) {
+                        tg.showAlert('К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!');
+                    } else {
+                        alert('К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!');
+                    }
+                }
+            } else {
+                // Older client or unsupported environment
+                const msg = 'К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!';
+                if (tg?.showAlert) {
+                    tg.showAlert(msg);
+                } else {
+                    alert(msg);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
