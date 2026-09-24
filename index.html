@@ -113,7 +113,6 @@
             } catch (e) {}
         }
 
-        // Initialize Lottie Animation
         try {
             lottie.loadAnimation({
                 container: document.getElementById('lottie-player'),
@@ -126,18 +125,15 @@
             console.error('Lottie load error:', e);
         }
 
-        // Parse query params
         const urlParams = new URLSearchParams(window.location.search);
         const botUsername = urlParams.get('bot') || 'user_bot';
         const linkName = urlParams.get('link') || '';
         const customMedia = urlParams.get('media');
 
-        // Target URL for widget link
         const targetUrl = linkName 
             ? `https://t.me/${botUsername}?start=${linkName}` 
             : `https://t.me/${botUsername}`;
 
-        // Absolute URL of media file (story image)
         const mediaUrl = customMedia || new URL('assets/story_share.png', window.location.href).href;
 
         const button = document.getElementById('post-story-btn');
@@ -156,7 +152,6 @@
                 }
             };
 
-            // Check if shareToStory is available
             if (tg && typeof tg.shareToStory === 'function') {
                 try {
                     tg.shareToStory(mediaUrl, params);
@@ -169,7 +164,6 @@
                     }
                 }
             } else {
-                // Older client or unsupported environment
                 const msg = 'К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!';
                 if (tg?.showAlert) {
                     tg.showAlert(msg);
