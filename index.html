@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Выложить историю</title>
+    <title>Hikoyaga joylash</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="static/lottie.min.js"></script>
     <style>
@@ -94,11 +94,11 @@
         </div>
 
         <p class="description">
-            Для того, чтобы выложить историю со своей ссылкой на анонимные послания – нажми кнопку ниже.
+            Anonim xabarlar uchun havolangiz bilan hikoya (story) joylash uchun quyidagi tugmani bosing.
         </p>
 
         <button id="post-story-btn" class="btn-story">
-            Выложить историю
+            Hikoyaga joylash
         </button>
     </div>
 
@@ -129,6 +129,33 @@
         const botUsername = urlParams.get('bot') || 'user_bot';
         const linkName = urlParams.get('link') || '';
         const customMedia = urlParams.get('media');
+        const lang = (urlParams.get('lang') || 'uz').toLowerCase();
+
+        const translations = {
+            uz: {
+                title: "Hikoyaga joylash",
+                desc: "Anonim xabarlar uchun havolangiz bilan hikoya (story) joylash uchun quyidagi tugmani bosing.",
+                btn: "Hikoyaga joylash",
+                caption: `valentinkalarni @${botUsername} ga yuboring`,
+                widget: "Valentinkalar",
+                pcAlert: "Afsuski, kompyuterdan (PK) hikoya joylab bo'lmaydi. Botni telefondan oching!"
+            },
+            ru: {
+                title: "Выложить историю",
+                desc: "Для того, чтобы выложить историю со своей ссылкой на анонимные послания – нажми кнопку ниже.",
+                btn: "Выложить историю",
+                caption: `отправляй валентинки в @${botUsername}`,
+                widget: "Валентинки",
+                pcAlert: "К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!"
+            }
+        };
+
+        const t = translations[lang] || translations.uz;
+        document.title = t.title;
+        const descEl = document.querySelector('.description');
+        if (descEl) descEl.textContent = t.desc;
+        const button = document.getElementById('post-story-btn');
+        if (button) button.textContent = t.btn;
 
         const targetUrl = linkName 
             ? `https://t.me/${botUsername}?start=${linkName}` 
@@ -136,19 +163,17 @@
 
         const mediaUrl = customMedia || new URL('assets/story_share.png', window.location.href).href;
 
-        const button = document.getElementById('post-story-btn');
-
         button.addEventListener('click', () => {
             if (tg?.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
 
-            const caption = `отправляй валентинки в @${botUsername}`;
+            const caption = t.caption;
             const params = {
                 text: caption,
                 widget_link: {
                     url: targetUrl,
-                    name: "Валентинки"
+                    name: t.widget
                 }
             };
 
@@ -157,14 +182,15 @@
                     tg.shareToStory(mediaUrl, params);
                 } catch (err) {
                     console.error('shareToStory error:', err);
+                    const msg = t.pcAlert;
                     if (tg.showAlert) {
-                        tg.showAlert('К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!');
+                        tg.showAlert(msg);
                     } else {
-                        alert('К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!');
+                        alert(msg);
                     }
                 }
             } else {
-                const msg = 'К сожалению, выкладывать истории с ПК нельзя. Открой бота со смартфона!';
+                const msg = t.pcAlert;
                 if (tg?.showAlert) {
                     tg.showAlert(msg);
                 } else {
